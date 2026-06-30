@@ -10,6 +10,9 @@ and exports a YouTube Shorts–ready `.mp4`.
 
 Three steps, nothing else: **transcribe → render → export.**
 
+> 📘 New here? Read **[GUIDE.md](GUIDE.md)** — a plain-English walkthrough of every
+> feature and every button in the live preview.
+
 > The source frame is passed through untouched. There is **no crop, no pan, no
 > reframe, no face-tracking** anywhere in the pipeline — what you put in is exactly
 > what comes out, with captions on top.
