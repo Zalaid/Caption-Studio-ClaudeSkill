@@ -60,9 +60,15 @@ node remotion/preview.mjs --video "your video.mp4" --captions "words.json"
 …then open **http://localhost:3000**. Here's every part of that window:
 
 ### 🔵 Left side — "Compositions"
-A list of the **caption styles**: `cosmicClean`, `moneyBold`, `minimal`.
-**Click a name to instantly see your video in that style.** This is the main way
-to compare looks. (The "Assets" tab just lists files like your video — ignore it.)
+A list of the **caption styles** (10 to start: `cosmicClean`, `moneyBold`,
+`minimal`, `boldYellow`, `karaokePill`, `neonGlow`, `subtitle`, `outline`,
+`hotPink`, `softAmber`). **Click a name to instantly see your video in that
+style.** This is the main way to compare looks. All styles place the captions in
+the **same spot** (lower-third) — they differ in color, font, outline and
+animation. (The "Assets" tab just lists files like your video — ignore it.)
+
+> These 10 are just a starting menu — **you can have unlimited styles.** Ask me to
+> add one (e.g. *"make a purple glow style"*) and it appears in this list.
 
 ### 🎬 Middle — the video preview
 Your actual video with captions on top. Press **Spacebar** to play/pause and
@@ -111,15 +117,24 @@ These are all the things you can change. You can set them in the Inspector, or
 just **tell me in words** (much easier).
 
 ### `styleName` — the overall look
-The big choice. Three built in:
-- **`cosmicClean`** — calm, white text, the active word turns **blue**, sits in the
-  lower third. Good for explainers / science. 🌌
-- **`moneyBold`** — BIG uppercase, active word **pops** in **green**, centered.
-  Great for money/hooks where a number should smack you. 💰 *(This is the one in
-  your screenshot.)*
-- **`minimal`** — plain clean white captions, no highlight. A neutral default.
+The big choice. 10 built in (and you can add unlimited more):
 
-> Example: *"use moneyBold"*
+| Style | Look |
+|-------|------|
+| **`cosmicClean`** 🌌 | calm white, active word **blue**, gentle fade |
+| **`moneyBold`** 💰 | BIG uppercase, active word **green**, pops |
+| **`minimal`** | plain clean white, no highlight |
+| **`boldYellow`** ⚡ | hype uppercase, thick outline, active word **yellow** |
+| **`karaokePill`** 🎤 | words on a dark rounded **pill**, active word green |
+| **`neonGlow`** 🌟 | glowing **cyan** neon, slides up |
+| **`subtitle`** 💬 | small, calm, classic captions, no highlight |
+| **`outline`** ⬛ | bold white with a heavy **black outline** |
+| **`hotPink`** 💗 | playful uppercase, active word **hot pink** |
+| **`softAmber`** 🔥 | gentle warm **amber** highlight, fades in |
+
+All of them keep the captions in the **same lower-third position**.
+
+> Example: *"use boldYellow"* or *"make a new style like neonGlow but purple"*
 
 ### `animation` — how the active word moves
 - **`pop`** — springs/scales in (energetic). 
