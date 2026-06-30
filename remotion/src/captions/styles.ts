@@ -201,9 +201,9 @@ export const STYLES: Record<string, CaptionStyle> = {
     baseColor: "#FFFFFF",
     activeColor: "#FFFFFF", // active word stays white (subtle pop only)
     keyColor: "#F5C518", // fixed brand gold for the key word
-    stroke: { color: "#0A0A0A", width: 4 }, // thin, clean — not a cartoon outline
+    stroke: { color: "#0A0A0A", width: 2 }, // thin, clean — not a cartoon outline
     shadow: "0px 4px 18px rgba(0,0,0,0.45)", // soft drop shadow
-    position: "center", // middle / slightly-upper, never the bottom
+    position: { y: 1080 }, // lower-middle: readable on Shorts, clear of the bottom UI
     maxWordsPerLine: 3,
     maxLines: 2,
     highlightActiveWord: false,
