@@ -131,6 +131,7 @@ The big choice. 10 built in (and you can add unlimited more):
 | **`outline`** ⬛ | bold white with a heavy **black outline** |
 | **`hotPink`** 💗 | playful uppercase, active word **hot pink** |
 | **`softAmber`** 🔥 | gentle warm **amber** highlight, fades in |
+| **`premiumGold`** 👑 | Montserrat ExtraBold, sentence case, the **key word** in gold ALL-CAPS, centered, subtle pop |
 
 All of them keep the captions in the **same lower-third position**.
 
@@ -183,6 +184,13 @@ Words spoken within this many **milliseconds** get shown together as one "card."
 Smaller number = words flip faster, one or two at a time. Bigger = longer phrases.
 
 > Example: *"flip the words faster"* (I'd lower combineMs)
+
+### `keyWords` — the gold payoff word (premiumGold style)
+Name the **one important word** (or a few) per video. In the `premiumGold` style
+those words render in fixed brand **gold + ALL-CAPS** with a bigger pop, while
+everything else stays white. The tool can't guess your payoff word, so you tell it.
+
+> Example: *"premiumGold, key word 'tenth'"* → "Only a **TENTH** is really there."
 
 ### `showProgressBar` — a progress line
 On = a thin bar at the bottom that fills up as the video plays (tells viewers how
