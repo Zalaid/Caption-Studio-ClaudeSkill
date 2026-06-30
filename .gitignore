@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Node / Remotion
+node_modules/
+remotion/node_modules/
+remotion/out/
+.remotion/
+
+# Build + render artifacts
+*.log
+out/
+output/
+renders/
+*.words.json
+words.json
+transcript.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Brand font binaries are user-supplied; keep the folder, ignore the files by default.
+# Uncomment the next line if you do NOT want to commit your brand fonts.
+# remotion/public/fonts/*.woff2
+# remotion/public/fonts/*.ttf
