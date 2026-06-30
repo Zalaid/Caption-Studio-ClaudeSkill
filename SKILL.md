@@ -40,12 +40,16 @@ Take the one finished vertical mp4 the user provides (Mode A — the only mode).
 Confirm it is 1080×1920; if not, proceed anyway but note it. Set:
 
 - `VIDEO` = absolute path to the input mp4.
-- `WORK` = a working folder (e.g. alongside the video) for `words.json` and output.
+- `OUT` = the final output path. Default: same folder as `VIDEO`, named
+  `<video-stem>-captioned.mp4`. **This is the only file that survives.**
+- `TMP` = a fresh temp folder for intermediates (`words.json`, `captioned.mp4`):
+  - macOS/Linux: `TMP="$(mktemp -d)"`
+  - Windows: `TMP="$(python -c "import tempfile,sys;sys.stdout.write(tempfile.mkdtemp(prefix='captionstudio_'))")"`
 
 ## Step 2 — Transcribe (then verify the words)
 
 ```bash
-python "${CLAUDE_SKILL_DIR}/scripts/transcribe.py" "$VIDEO" --output "$WORK/words.json"
+python "${CLAUDE_SKILL_DIR}/scripts/transcribe.py" "$VIDEO" --output "$TMP/words.json"
 ```
 
 **Quality gate (important for numbers/names):** read `words.json` and show the
@@ -64,6 +68,17 @@ styles live in `remotion/src/captions/styles.ts`:
 - `moneyBold` — uppercase pop-in, green active word, centered.
 - `minimal` — ultra-clean, no highlight.
 
+**Want to pick visually?** Offer to open **Remotion Studio** — a live browser
+preview where the user scrubs the video and flips styles/options in a side panel,
+seeing fonts, colors and animations update instantly:
+
+```bash
+node "${CLAUDE_SKILL_DIR}/remotion/preview.mjs" --video "$VIDEO" --captions "$TMP/words.json"
+# then open the printed URL (http://localhost:3000) and use the right-hand "Props" panel
+```
+
+When they've decided in Studio, note their `styleName` + any tweaks and continue.
+
 Optional overrides to offer: `--hook "<opening line>"`, `--progress` (progress
 bar on), `--style <name>`. Anything deeper (colors, fonts, new styles) is edited
 in `styles.ts`.
@@ -75,19 +90,32 @@ Render captions over the full frame:
 ```bash
 node "${CLAUDE_SKILL_DIR}/remotion/render.mjs" \
   --video "$VIDEO" \
-  --captions "$WORK/words.json" \
-  --output "$WORK/captioned.mp4" \
+  --captions "$TMP/words.json" \
+  --output "$TMP/captioned.mp4" \
   --style "$STYLE"
 ```
 
-Then transcode to the YouTube Shorts delivery preset:
+Then transcode to the YouTube Shorts delivery preset, writing the **final** file:
 
 ```bash
 # macOS/Linux
-bash "${CLAUDE_SKILL_DIR}/scripts/export.sh" "$WORK/captioned.mp4" "$WORK/final.mp4"
+bash "${CLAUDE_SKILL_DIR}/scripts/export.sh" "$TMP/captioned.mp4" "$OUT"
 # Windows
-powershell -File "${CLAUDE_SKILL_DIR}/scripts/export.ps1" -In "$WORK/captioned.mp4" -Out "$WORK/final.mp4"
+powershell -File "${CLAUDE_SKILL_DIR}/scripts/export.ps1" -In "$TMP/captioned.mp4" -Out "$OUT"
 ```
 
-Report the path to `final.mp4` and you're done. No candidate tables, no segment
+## Step 5 — Clean up temp files (always)
+
+Once `$OUT` exists and is non-empty, delete the temp folder so nothing is left
+behind — `$OUT` is the only artifact that should remain:
+
+```bash
+rm -rf "$TMP"                          # macOS/Linux
+# Windows (PowerShell): Remove-Item -Recurse -Force "$TMP"
+```
+
+If a step **failed**, keep `$TMP` and tell the user its path for debugging instead
+of deleting it. (Remotion cleans its own OS-temp bundle automatically.)
+
+Report the path to `$OUT` and you're done. No candidate tables, no segment
 picking, no reframe prompts — plain and fast.
