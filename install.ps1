@@ -21,9 +21,23 @@ New-Item -ItemType Directory -Force -Path $target | Out-Null
 
 $exclude = @(".git", "node_modules", ".venv", "out", "__pycache__")
 
-robocopy $src $target /MIR /XD $exclude /NFL /NDL /NJH /NJS /NP | Out-Null
-# robocopy exit codes 0-7 are success; 8+ are real errors.
-if ($LASTEXITCODE -ge 8) { throw "robocopy failed with code $LASTEXITCODE" }
+function Test-Excluded([string]$fullPath) {
+  $rel = $fullPath.Substring($src.Length).TrimStart('\', '/')
+  foreach ($e in $exclude) {
+    if ($rel -split '[\\/]' -contains $e) { return $true }
+  }
+  return $false
+}
+
+Get-ChildItem -Path $src -Recurse -Force | Where-Object { -not (Test-Excluded $_.FullName) } | ForEach-Object {
+  $dest = Join-Path $target $_.FullName.Substring($src.Length).TrimStart('\', '/')
+  if ($_.PSIsContainer) {
+    New-Item -ItemType Directory -Force -Path $dest | Out-Null
+  } else {
+    New-Item -ItemType Directory -Force -Path (Split-Path $dest) | Out-Null
+    Copy-Item -LiteralPath $_.FullName -Destination $dest -Force
+  }
+}
 
 Write-Host "Done. Open Claude Code under that tree and run /caption-studio."
 Write-Host "First run will set up Python + Node deps via setup.sh."
