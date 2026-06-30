@@ -33,6 +33,9 @@ function positionStyle(position: CaptionPosition): React.CSSProperties {
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
+  // Guard against 0 / negative sizes (e.g. set by hand in the Studio props
+  // panel) which would otherwise loop forever — treat as "all on one line".
+  if (!size || size < 1) return [arr];
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
   return out;
@@ -101,7 +104,8 @@ export const CaptionLayer: React.FC<Props> = ({ pages, style }) => {
   const page = pages.find((p) => currentMs >= p.startMs && currentMs < p.startMs + p.durationMs);
   if (!page) return null;
 
-  const lines = chunk(page.tokens, style.maxWordsPerLine).slice(0, style.maxLines);
+  const maxLines = style.maxLines && style.maxLines > 0 ? style.maxLines : Infinity;
+  const lines = chunk(page.tokens, style.maxWordsPerLine).slice(0, maxLines);
 
   const textBlock = (
     <div

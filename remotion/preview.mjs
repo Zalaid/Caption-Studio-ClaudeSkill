@@ -62,7 +62,10 @@ const props = {
   hookDurationSec: 3.5,
 };
 
-const propsFile = path.resolve(__dirname, ".preview-props.json");
+// Use a relative path (no spaces) — the studio CLI is spawned with cwd=__dirname,
+// and an absolute path containing spaces gets mangled by the shell on Windows.
+const propsRel = ".preview-props.json";
+const propsFile = path.resolve(__dirname, propsRel);
 fs.writeFileSync(propsFile, JSON.stringify(props, null, 2));
 
 // Clean up the copied media + props file when Studio is stopped.
@@ -80,6 +83,6 @@ process.on("SIGTERM", () => process.exit(0));
 console.log("[preview] launching Remotion Studio — open the printed URL, then use the Props panel.");
 console.log(`[preview] starting style: ${values.style}`);
 
-const args = ["remotion", "studio", "src/index.ts", `--props=${propsFile}`, `--port=${values.port}`];
+const args = ["remotion", "studio", "src/index.ts", `--props=${propsRel}`, `--port=${values.port}`];
 const child = spawn("npx", args, { cwd: __dirname, stdio: "inherit", shell: true });
 child.on("exit", (code) => process.exit(code ?? 0));
