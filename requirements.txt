@@ -1,0 +1,12 @@
+# Caption Studio — Python dependencies
+#
+# Transcription only. No face/cursor tracking, so no mediapipe / opencv.
+#
+# faster-whisper runs on CTranslate2 and gives word-level timestamps.
+# GPU (CUDA) is used automatically when available; otherwise it falls back to CPU.
+faster-whisper>=1.0.3
+
+# Optional: forced alignment for 100%-correct words from a known script.
+# Only needed if you use scripts/align.py (TTS / separate clean voice track).
+# Install manually when required:
+#   pip install whisperx
