@@ -67,45 +67,53 @@ def main() -> int:
     device = pick_device(args.device)
     compute_type = pick_compute_type(args.compute_type, device)
 
+    def run(dev: str, ctype: str):
+        """Run a full transcription on the given device, materializing all words.
+
+        The CUDA libraries (cuBLAS/cuDNN) may be missing even when a GPU is
+        present; that error only surfaces while the lazy segment iterator runs,
+        so we consume it fully here and let the caller decide whether to retry.
+        """
+        model = WhisperModel(args.model, device=dev, compute_type=ctype)
+        segments_iter, info = model.transcribe(
+            str(src),
+            language=args.language,
+            word_timestamps=True,
+            vad_filter=True,
+        )
+        words: list[dict] = []
+        captions: list[dict] = []
+        segments: list[dict] = []
+        for seg in segments_iter:
+            seg_words = []
+            for w in seg.words or []:
+                text = w.word.strip()
+                if not text:
+                    continue
+                entry = {"word": text, "start": round(w.start, 3), "end": round(w.end, 3)}
+                words.append(entry)
+                seg_words.append(entry)
+                captions.append(
+                    {"text": text, "startMs": int(round(w.start * 1000)), "endMs": int(round(w.end * 1000))}
+                )
+            segments.append(
+                {"start": round(seg.start, 3), "end": round(seg.end, 3), "text": seg.text.strip(), "words": seg_words}
+            )
+        return info, words, captions, segments
+
     print(f"[transcribe] model={args.model} device={device} compute_type={compute_type}", file=sys.stderr)
     started = time.time()
 
-    model = WhisperModel(args.model, device=device, compute_type=compute_type)
-    segments_iter, info = model.transcribe(
-        str(src),
-        language=args.language,
-        word_timestamps=True,
-        vad_filter=True,
-    )
-
-    words: list[dict] = []
-    captions: list[dict] = []
-    segments: list[dict] = []
-
-    for seg in segments_iter:
-        seg_words = []
-        for w in seg.words or []:
-            text = w.word.strip()
-            if not text:
-                continue
-            entry = {"word": text, "start": round(w.start, 3), "end": round(w.end, 3)}
-            words.append(entry)
-            seg_words.append(entry)
-            captions.append(
-                {
-                    "text": text,
-                    "startMs": int(round(w.start * 1000)),
-                    "endMs": int(round(w.end * 1000)),
-                }
-            )
-        segments.append(
-            {
-                "start": round(seg.start, 3),
-                "end": round(seg.end, 3),
-                "text": seg.text.strip(),
-                "words": seg_words,
-            }
-        )
+    try:
+        info, words, captions, segments = run(device, compute_type)
+    except (RuntimeError, OSError) as e:
+        # Auto-picked CUDA but the runtime can't load it -> fall back to CPU.
+        if device == "cuda" and args.device == "auto":
+            print(f"[transcribe] CUDA failed ({e}); falling back to CPU.", file=sys.stderr)
+            device, compute_type = "cpu", pick_compute_type("auto", "cpu")
+            info, words, captions, segments = run(device, compute_type)
+        else:
+            raise
 
     elapsed = round(time.time() - started, 2)
 
