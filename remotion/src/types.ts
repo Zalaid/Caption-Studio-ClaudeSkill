@@ -33,7 +33,20 @@ export const captionedShortSchema = z.object({
   // Style selection. Keep this list in sync with the keys in captions/styles.ts —
   // using an enum makes Remotion Studio render a dropdown so you can flip styles
   // live in the browser.
-  styleName: z.enum(["cosmicClean", "moneyBold", "minimal"]).default("cosmicClean"),
+  styleName: z
+    .enum([
+      "cosmicClean",
+      "moneyBold",
+      "minimal",
+      "boldYellow",
+      "karaokePill",
+      "neonGlow",
+      "subtitle",
+      "outline",
+      "hotPink",
+      "softAmber",
+    ])
+    .default("cosmicClean"),
 
   // Per-video overrides (optional — leave undefined to use the style's value)
   position: positionSchema.optional(),

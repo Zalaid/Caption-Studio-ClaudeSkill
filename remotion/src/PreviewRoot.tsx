@@ -1,7 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { CaptionedShort } from "./CaptionedShort";
-import { captionedShortSchema } from "./types";
+import { captionedShortSchema, type CaptionedShortProps } from "./types";
 import { STYLES } from "./captions/styles";
 import data from "./.preview-data.json";
 
@@ -41,7 +41,7 @@ export const PreviewRoot: React.FC = () => {
             captions: base.captions,
             durationInSeconds: base.durationInSeconds,
             fps,
-            styleName: name as "cosmicClean" | "moneyBold" | "minimal",
+            styleName: name as CaptionedShortProps["styleName"],
             combineMs: 800,
             showProgressBar: false,
             hookText: "",
