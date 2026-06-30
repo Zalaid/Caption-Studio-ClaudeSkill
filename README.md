@@ -141,12 +141,22 @@ powershell -File scripts/export.ps1 -In captioned.mp4 -Out final.mp4   # Windows
 **`render.mjs` flags:** `--style <name>` · `--hook "Opening line"` ·
 `--progress` (show progress bar) · `--fps 30`.
 
-### Live preview (Remotion Studio)
+### Pick a style visually (live browser preview)
+
+Not sure which style you want? Open **Remotion Studio** with your own video loaded
+and try them live — scrub the timeline and flip styles/colors/options in the
+right-hand **Props** panel, with fonts and animations updating instantly:
 
 ```bash
-cd remotion
-npm run studio
+node remotion/preview.mjs --video input.mp4 --captions words.json
 ```
+
+It prints a URL (default `http://localhost:3000`). Change `styleName` in the Props
+panel to compare looks, settle on one, then run the real render (above) with that
+`--style`. Temp files the preview copies in are removed automatically when you
+stop it (Ctrl+C).
+
+> Plain Studio with no video preloaded: `cd remotion && npm run studio`.
 
 ---
 
