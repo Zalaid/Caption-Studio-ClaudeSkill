@@ -20,8 +20,9 @@ renders/
 words.json
 transcript.json
 
-# Preview temp (copied into public/ by preview.mjs, auto-removed on stop)
+# Preview temp (staged by preview.mjs, auto-removed on stop)
 remotion/.preview-props.json
+remotion/src/.preview-data.json
 remotion/public/preview-source.*
 
 # OS

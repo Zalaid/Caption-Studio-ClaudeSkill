@@ -1,12 +1,12 @@
-// Open Remotion Studio (a live browser preview) with YOUR video + captions
-// loaded, so you can flip styles/options in the side panel and watch fonts,
-// colors and animations update instantly. Pick a style, then render for real.
+// Open Remotion Studio (a live browser preview) to COMPARE caption styles on
+// YOUR video. Each built-in style appears as its own item in the left sidebar,
+// already loaded with your video + captions — just click between them.
 //
 // Usage:
-//   node preview.mjs --video /abs/input.mp4 --captions /abs/words.json [--style moneyBold]
+//   node preview.mjs --video /abs/input.mp4 --captions /abs/words.json
 //
-// Opens http://localhost:3000 — use the right-hand "Props" panel to try styles.
-// Temp files it copies in are removed automatically when you stop it (Ctrl+C).
+// Opens http://localhost:3000. Pick the style you like, then render it for real.
+// Temp files it stages are removed automatically when you stop it (Ctrl+C).
 
 import path from "node:path";
 import fs from "node:fs";
@@ -20,7 +20,6 @@ const { values } = parseArgs({
   options: {
     video: { type: "string" },
     captions: { type: "string" },
-    style: { type: "string", default: "cosmicClean" },
     port: { type: "string", default: "3000" },
   },
 });
@@ -50,27 +49,15 @@ const captions = transcript.captions ?? [];
 const durationInSeconds =
   transcript.duration || (captions.length ? captions[captions.length - 1].endMs / 1000 : 0);
 
-const props = {
-  videoSrc: previewName,
-  captions,
-  durationInSeconds,
-  fps: 30,
-  styleName: values.style,
-  combineMs: 800,
-  showProgressBar: false,
-  hookText: "",
-  hookDurationSec: 3.5,
-};
+// PreviewRoot.tsx imports this file; one composition per style is built from it.
+const dataFile = path.resolve(__dirname, "src/.preview-data.json");
+fs.writeFileSync(
+  dataFile,
+  JSON.stringify({ videoSrc: previewName, captions, durationInSeconds, fps: 30 }, null, 2)
+);
 
-// Use a relative path (no spaces) — the studio CLI is spawned with cwd=__dirname,
-// and an absolute path containing spaces gets mangled by the shell on Windows.
-const propsRel = ".preview-props.json";
-const propsFile = path.resolve(__dirname, propsRel);
-fs.writeFileSync(propsFile, JSON.stringify(props, null, 2));
-
-// Clean up the copied media + props file when Studio is stopped.
 const cleanup = () => {
-  for (const f of [previewCopy, propsFile]) {
+  for (const f of [previewCopy, dataFile]) {
     try {
       if (fs.existsSync(f)) fs.unlinkSync(f);
     } catch {}
@@ -80,9 +67,9 @@ process.on("exit", cleanup);
 process.on("SIGINT", () => process.exit(0));
 process.on("SIGTERM", () => process.exit(0));
 
-console.log("[preview] launching Remotion Studio — open the printed URL, then use the Props panel.");
-console.log(`[preview] starting style: ${values.style}`);
+console.log("[preview] Studio starting — open the printed URL, then click each style in the left sidebar.");
+console.log(`[preview] ${captions.length} caption words loaded from your video.`);
 
-const args = ["remotion", "studio", "src/index.ts", `--props=${propsRel}`, `--port=${values.port}`];
+const args = ["remotion", "studio", "src/preview.ts", `--port=${values.port}`];
 const child = spawn("npx", args, { cwd: __dirname, stdio: "inherit", shell: true });
 child.on("exit", (code) => process.exit(code ?? 0));
