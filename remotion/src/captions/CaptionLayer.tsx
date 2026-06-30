@@ -7,7 +7,7 @@ import {
   useVideoConfig,
 } from "remotion";
 import type { CaptionStyle } from "./styles";
-import type { CaptionAnimation, CaptionPosition } from "../types";
+import type { CaptionPosition } from "../types";
 
 type Page = {
   text: string;
@@ -19,7 +19,13 @@ type Page = {
 type Props = {
   pages: Page[];
   style: CaptionStyle;
+  keyWords?: string[]; // normalized (see normalizeWord)
 };
+
+/** Lowercase + strip punctuation/whitespace so "VANISHES." matches "vanishes". */
+export function normalizeWord(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
 
 function positionStyle(position: CaptionPosition): React.CSSProperties {
   if (position === "center") {
@@ -28,13 +34,10 @@ function positionStyle(position: CaptionPosition): React.CSSProperties {
   if (position === "lower-third") {
     return { justifyContent: "flex-end", paddingBottom: 320 };
   }
-  // absolute Y from the top
   return { justifyContent: "flex-start", paddingTop: position.y };
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
-  // Guard against 0 / negative sizes (e.g. set by hand in the Studio props
-  // panel) which would otherwise loop forever — treat as "all on one line".
   if (!size || size < 1) return [arr];
   const out: T[][] = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -44,31 +47,33 @@ function chunk<T>(arr: T[], size: number): T[][] {
 const Word: React.FC<{
   token: { text: string; fromMs: number; toMs: number };
   active: boolean;
+  isKey: boolean;
   style: CaptionStyle;
-  animation: CaptionAnimation;
   fps: number;
   currentMs: number;
-}> = ({ token, active, style, animation, fps, currentMs }) => {
+}> = ({ token, active, isKey, style, fps, currentMs }) => {
   const frame = useCurrentFrame();
-
-  // Progress since this word started being spoken (for entrance animations).
-  const wordStartFrame = (token.fromMs / 1000) * fps;
-  const sinceStart = frame - wordStartFrame;
+  const sinceStart = frame - (token.fromMs / 1000) * fps;
+  const anim = style.animation;
 
   let transform = "none";
   let opacity = 1;
+  const peak = isKey ? 1.12 : 1.05; // key word pops a little bigger
 
-  if (animation === "pop" && active) {
+  if (anim === "pop" && active) {
     const s = spring({ frame: sinceStart, fps, config: { damping: 12, stiffness: 180 } });
-    const scale = interpolate(s, [0, 1], [0.7, 1.12], { extrapolateRight: "clamp" });
-    transform = `scale(${Math.min(scale, 1.12)})`;
-  } else if (animation === "slide" && active) {
-    const y = interpolate(sinceStart, [0, 6], [18, 0], {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    });
+    const scale = interpolate(s, [0, 1], [0.7, isKey ? 1.14 : 1.1], { extrapolateRight: "clamp" });
+    transform = `scale(${scale})`;
+  } else if (anim === "softPop") {
+    // Subtle, no bounce: ease up to the peak while the word is active.
+    const scale = active
+      ? interpolate(sinceStart, [0, 5], [1, peak], { extrapolateLeft: "clamp", extrapolateRight: "clamp" })
+      : 1;
+    transform = `scale(${scale})`;
+  } else if (anim === "slide" && active) {
+    const y = interpolate(sinceStart, [0, 6], [18, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
     transform = `translateY(${y}px)`;
-  } else if (animation === "fade") {
+  } else if (anim === "fade") {
     opacity = active
       ? 1
       : interpolate(currentMs, [token.fromMs - 120, token.fromMs], [0.55, 1], {
@@ -77,7 +82,18 @@ const Word: React.FC<{
         });
   }
 
-  const color = style.highlightActiveWord && active ? style.activeColor : style.baseColor;
+  // Color: a designated key word (in a style that defines keyColor) flips to the
+  // brand color once it's spoken and stays there. Otherwise, optional active-word
+  // highlight, else the base color.
+  const treatAsKey = isKey && Boolean(style.keyColor);
+  let color = style.baseColor;
+  if (treatAsKey && currentMs >= token.fromMs) {
+    color = style.keyColor as string;
+  } else if (style.highlightActiveWord && active) {
+    color = style.activeColor;
+  }
+
+  const upper = treatAsKey || style.uppercase;
 
   return (
     <span
@@ -86,17 +102,17 @@ const Word: React.FC<{
         color,
         transform,
         opacity,
-        transition: "color 80ms linear",
+        transition: "color 90ms linear",
         WebkitTextStroke: style.stroke ? `${style.stroke.width}px ${style.stroke.color}` : undefined,
         paintOrder: "stroke fill",
       }}
     >
-      {style.uppercase ? token.text.toUpperCase() : token.text}
+      {upper ? token.text.toUpperCase() : token.text}
     </span>
   );
 };
 
-export const CaptionLayer: React.FC<Props> = ({ pages, style }) => {
+export const CaptionLayer: React.FC<Props> = ({ pages, style, keyWords = [] }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const currentMs = (frame / fps) * 1000;
@@ -131,13 +147,14 @@ export const CaptionLayer: React.FC<Props> = ({ pages, style }) => {
         <div key={li} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.28em" }}>
           {lineTokens.map((token, ti) => {
             const active = currentMs >= token.fromMs && currentMs < token.toMs;
+            const isKey = keyWords.includes(normalizeWord(token.text));
             return (
               <Word
                 key={`${li}-${ti}`}
                 token={token}
                 active={active}
+                isKey={isKey}
                 style={style}
-                animation={style.animation}
                 fps={fps}
                 currentMs={currentMs}
               />

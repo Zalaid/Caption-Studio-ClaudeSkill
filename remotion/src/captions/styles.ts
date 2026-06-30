@@ -16,6 +16,7 @@ export type CaptionStyle = {
   letterSpacing: number;
   baseColor: string; // inactive words
   activeColor: string; // the spoken / highlighted word
+  keyColor?: string; // fixed brand color for designated key words (see keyWords prop)
   stroke?: { color: string; width: number };
   shadow?: string; // CSS text-shadow value (also used to fake a "glow")
   pill?: { color: string; radius: number; paddingX: number; paddingY: number };
@@ -187,6 +188,26 @@ export const STYLES: Record<string, CaptionStyle> = {
     maxLines: 2,
     highlightActiveWord: true,
     animation: "pop",
+  },
+
+  // 11. Premium Gold — brand spec: Montserrat ExtraBold, sentence case with the
+  // ONE key word in ALL-CAPS + fixed gold, white elsewhere, subtle pop, centered.
+  premiumGold: {
+    font: FONTS.premium,
+    fontSize: 140, // ~8% of a 1920px-tall frame
+    fontWeight: 800,
+    uppercase: false, // sentence case; only key words go ALL-CAPS
+    letterSpacing: 0,
+    baseColor: "#FFFFFF",
+    activeColor: "#FFFFFF", // active word stays white (subtle pop only)
+    keyColor: "#F5C518", // fixed brand gold for the key word
+    stroke: { color: "#0A0A0A", width: 4 }, // thin, clean — not a cartoon outline
+    shadow: "0px 4px 18px rgba(0,0,0,0.45)", // soft drop shadow
+    position: "center", // middle / slightly-upper, never the bottom
+    maxWordsPerLine: 3,
+    maxLines: 2,
+    highlightActiveWord: false,
+    animation: "softPop",
   },
 
   // 10. Soft amber — gentle, warm highlight, fades in. Cozy / storytelling.

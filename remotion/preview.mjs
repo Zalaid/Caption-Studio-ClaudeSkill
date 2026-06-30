@@ -20,6 +20,7 @@ const { values } = parseArgs({
   options: {
     video: { type: "string" },
     captions: { type: "string" },
+    keywords: { type: "string" },
     port: { type: "string", default: "3000" },
   },
 });
@@ -49,12 +50,23 @@ const captions = transcript.captions ?? [];
 const durationInSeconds =
   transcript.duration || (captions.length ? captions[captions.length - 1].endMs / 1000 : 0);
 
+// Demo "key word" for the premiumGold style: pick the longest content word so you
+// can see the gold ALL-CAPS effect immediately. Override per video via --keywords.
+const demoKey =
+  values.keywords ||
+  captions
+    .map((c) => String(c.text).toLowerCase().replace(/[^a-z0-9]/g, ""))
+    .filter((w) => w.length >= 5)
+    .sort((a, b) => b.length - a.length)[0] ||
+  "";
+
 // PreviewRoot.tsx imports this file; one composition per style is built from it.
 const dataFile = path.resolve(__dirname, "src/.preview-data.json");
 fs.writeFileSync(
   dataFile,
-  JSON.stringify({ videoSrc: previewName, captions, durationInSeconds, fps: 30 }, null, 2)
+  JSON.stringify({ videoSrc: previewName, captions, durationInSeconds, fps: 30, keyWords: demoKey }, null, 2)
 );
+if (demoKey) console.log(`[preview] premiumGold key word (gold): "${demoKey}" — change with --keywords`);
 
 const cleanup = () => {
   for (const f of [previewCopy, dataFile]) {

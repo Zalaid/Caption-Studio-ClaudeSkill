@@ -15,7 +15,7 @@ export const positionSchema = z.union([
 ]);
 export type CaptionPosition = z.infer<typeof positionSchema>;
 
-export const animationSchema = z.enum(["pop", "fade", "slide", "none"]);
+export const animationSchema = z.enum(["pop", "softPop", "fade", "slide", "none"]);
 export type CaptionAnimation = z.infer<typeof animationSchema>;
 
 /**
@@ -45,8 +45,14 @@ export const captionedShortSchema = z.object({
       "outline",
       "hotPink",
       "softAmber",
+      "premiumGold",
     ])
     .default("cosmicClean"),
+
+  // One or more "key words" (comma/space separated). In styles that define a key
+  // color (e.g. premiumGold), these words render in the brand color + ALL-CAPS with
+  // a bigger pop — the editorial payoff word. Other styles ignore this.
+  keyWords: z.string().default(""),
 
   // Per-video overrides (optional — leave undefined to use the style's value)
   position: positionSchema.optional(),

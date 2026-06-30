@@ -17,6 +17,7 @@ type PreviewData = {
   captions: { text: string; startMs: number; endMs: number }[];
   durationInSeconds: number;
   fps: number;
+  keyWords?: string;
 };
 
 export const PreviewRoot: React.FC = () => {
@@ -42,6 +43,7 @@ export const PreviewRoot: React.FC = () => {
             durationInSeconds: base.durationInSeconds,
             fps,
             styleName: name as CaptionedShortProps["styleName"],
+            keyWords: base.keyWords || "",
             combineMs: 800,
             showProgressBar: false,
             hookText: "",

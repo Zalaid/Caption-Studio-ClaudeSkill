@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { AbsoluteFill, OffthreadVideo, staticFile } from "remotion";
-import { CaptionLayer } from "./captions/CaptionLayer";
+import { CaptionLayer, normalizeWord } from "./captions/CaptionLayer";
 import { getStyle, type CaptionStyle } from "./captions/styles";
 import { useCaptionPages } from "./hooks/useCaptionPages";
 import { HookOverlay } from "./overlays/HookOverlay";
@@ -33,6 +33,10 @@ export const CaptionedShort: React.FC<CaptionedShortProps> = (props) => {
 
   const style = useMemo(() => resolveStyle(getStyle(props.styleName), props), [props]);
   const pages = useCaptionPages(captions, combineMs);
+  const keyWords = useMemo(
+    () => (props.keyWords || "").split(/[,\s]+/).map(normalizeWord).filter(Boolean),
+    [props.keyWords]
+  );
 
   const src = videoSrc.startsWith("http") ? videoSrc : staticFile(videoSrc);
 
@@ -41,7 +45,7 @@ export const CaptionedShort: React.FC<CaptionedShortProps> = (props) => {
       {/* Full frame, untouched. No crop, no pan, no reframe. */}
       <OffthreadVideo src={src} />
 
-      <CaptionLayer pages={pages} style={style} />
+      <CaptionLayer pages={pages} style={style} keyWords={keyWords} />
 
       {showProgressBar && <ProgressBar />}
 
