@@ -44,7 +44,7 @@ export const PreviewRoot: React.FC = () => {
             fps,
             styleName: name as CaptionedShortProps["styleName"],
             keyWords: base.keyWords || "",
-            combineMs: 800,
+            combineMs: 400, // match render.mjs — ~1–2 words/page so curioFacts single-line never drops words
             showProgressBar: false,
             hookText: "",
             hookDurationSec: 3.5,
