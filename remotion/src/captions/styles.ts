@@ -210,6 +210,31 @@ export const STYLES: Record<string, CaptionStyle> = {
     animation: "softPop",
   },
 
+  // 12. Curio Facts — the research-backed winner for facts / curiosity Shorts.
+  // Distilled from 20 high-view Shorts (RealLifeLore, InfographicsShow, Kurzgesagt,
+  // ColdFusion, SciShow): white Montserrat ExtraBold, SENTENCE case (what the big
+  // channels actually do for the body — caps is only for the hook), 1–3 words on a
+  // SINGLE line, thick black outline that reads on any footage, centered lower-third,
+  // word-by-word pop. The ONE payoff word/number turns yellow — set it via the
+  // `keyWords` prop. Pair with a big ALL-CAPS `hookText` for the first ~3 seconds.
+  curioFacts: {
+    font: FONTS.premium, // Montserrat ExtraBold, fallback Inter
+    fontSize: 140, // ~7.3% of a 1920px frame — the viral-facts band (RealLifeLore / InfographicsShow run 7–9%)
+    fontWeight: 800,
+    uppercase: false, // sentence case body; only the key word / hook go caps
+    letterSpacing: 0,
+    baseColor: "#FFFFFF",
+    activeColor: "#FFFFFF", // no karaoke colour-sweep — words simply pop in
+    keyColor: "#FFD400", // the one payoff word/number goes brand yellow
+    stroke: { color: "#000000", width: 10 }, // thick outline — legible over maps / b-roll
+    shadow: "0px 5px 20px rgba(0,0,0,0.55)", // soft drop shadow underneath
+    position: "lower-third", // ~75% down, clear of the Shorts UI bar
+    maxWordsPerLine: 2, // big text stays on one line — the punchy 1–2 word viral look
+    maxLines: 1, // single line = the punchy 1–2 word look
+    highlightActiveWord: false,
+    animation: "pop", // snappy word-by-word reveal
+  },
+
   // 10. Soft amber — gentle, warm highlight, fades in. Cozy / storytelling.
   softAmber: {
     font: FONTS.sans,
@@ -228,7 +253,7 @@ export const STYLES: Record<string, CaptionStyle> = {
   },
 };
 
-export const DEFAULT_STYLE = "cosmicClean";
+export const DEFAULT_STYLE = "curioFacts";
 
 export function getStyle(name: string): CaptionStyle {
   return STYLES[name] ?? STYLES[DEFAULT_STYLE];
