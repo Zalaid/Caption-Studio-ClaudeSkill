@@ -21,10 +21,10 @@ const { values } = parseArgs({
     video: { type: "string" },
     captions: { type: "string" },
     output: { type: "string" },
-    style: { type: "string", default: "cosmicClean" },
+    style: { type: "string", default: "curioFacts" },
     keywords: { type: "string", default: "" },
     hook: { type: "string", default: "" },
-    "hook-seconds": { type: "string", default: "3.5" },
+    "hook-seconds": { type: "string" }, // omit → auto-timed from the transcript (see autoHookSeconds)
     progress: { type: "boolean", default: false },
     fps: { type: "string", default: "30" },
   },
@@ -55,6 +55,31 @@ const durationInSeconds =
 
 if (!durationInSeconds) fail("could not determine duration from captions JSON");
 
+/**
+ * Auto-time the hook overlay from the transcript: keep it up until the first
+ * natural pause in the narration (first inter-word gap > 350ms), so it never cuts
+ * off mid-thought or overstays. Clamped to a sane 2–4s. Overridable via --hook-seconds.
+ */
+function autoHookSeconds(caps) {
+  if (!caps || caps.length === 0) return 3.0;
+  let endMs = caps[0].endMs;
+  for (let i = 1; i < caps.length; i++) {
+    if (caps[i].startMs - caps[i - 1].endMs > 350) {
+      endMs = caps[i - 1].endMs;
+      break;
+    }
+    endMs = caps[i].endMs;
+  }
+  return Math.min(4, Math.max(2, endMs / 1000));
+}
+
+const hookSeconds =
+  values["hook-seconds"] != null
+    ? Number(values["hook-seconds"])
+    : values.hook
+    ? autoHookSeconds(captions)
+    : 3.5;
+
 const inputProps = {
   // publicDir below is set to the video's folder, so the component loads it via staticFile(basename).
   videoSrc: path.basename(videoPath),
@@ -62,11 +87,11 @@ const inputProps = {
   durationInSeconds,
   fps,
   styleName: values.style,
-  keyWords: values.keywords ?? "",
-  combineMs: 800,
+  keyWords: values.keywords ?? "", // contextual payoff words Claude picks per script (numbers auto-emphasise)
+  combineMs: 400, // ~1–2 words per page → punchy near word-by-word (matches curioFacts single-line)
   showProgressBar: Boolean(values.progress),
   hookText: values.hook ?? "",
-  hookDurationSec: Number(values["hook-seconds"]) || 3.5,
+  hookDurationSec: hookSeconds, // auto-timed from transcript unless --hook-seconds is passed
 };
 
 console.log(`[render] bundling…`);
