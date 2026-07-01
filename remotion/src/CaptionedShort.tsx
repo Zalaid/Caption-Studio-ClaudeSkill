@@ -33,8 +33,13 @@ export const CaptionedShort: React.FC<CaptionedShortProps> = (props) => {
 
   const style = useMemo(() => resolveStyle(getStyle(props.styleName), props), [props]);
   const pages = useCaptionPages(captions, combineMs);
-  const keyWords = useMemo(
-    () => (props.keyWords || "").split(/[,\s]+/).map(normalizeWord).filter(Boolean),
+
+  // Words to render in the style's key colour. No fixed word list / heuristic:
+  //  • numbers, units, %, $ are auto-emphasised structurally (handled in CaptionLayer)
+  //  • `keyWords` holds the contextual payoff words — chosen fresh per script (by Claude,
+  //    reading the topic + transcript), not from any static list.
+  const keySet = useMemo(
+    () => new Set((props.keyWords || "").split(/[,\s]+/).map(normalizeWord).filter(Boolean)),
     [props.keyWords]
   );
 
@@ -45,7 +50,7 @@ export const CaptionedShort: React.FC<CaptionedShortProps> = (props) => {
       {/* Full frame, untouched. No crop, no pan, no reframe. */}
       <OffthreadVideo src={src} />
 
-      <CaptionLayer pages={pages} style={style} keyWords={keyWords} />
+      <CaptionLayer pages={pages} style={style} keySet={keySet} />
 
       {showProgressBar && <ProgressBar />}
 
