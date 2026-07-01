@@ -36,13 +36,15 @@ export const HookOverlay: React.FC<{
           opacity: enter * exitOpacity,
           transform: `scale(${scale})`,
           fontFamily: font,
-          fontSize: 88,
+          fontSize: 100,
           fontWeight: 900,
           color: "#FFFFFF",
+          textTransform: "uppercase", // big ALL-CAPS hook — the top-channel scroll-stopper
           textAlign: "center",
           lineHeight: 1.1,
-          textShadow: "0px 8px 30px rgba(0,0,0,0.6)",
-          WebkitTextStroke: "3px rgba(0,0,0,0.4)",
+          letterSpacing: 0.5,
+          textShadow: "0px 8px 30px rgba(0,0,0,0.65)",
+          WebkitTextStroke: "8px #000000", // thick black outline, reads over any footage
           paintOrder: "stroke fill",
         }}
       >
