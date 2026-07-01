@@ -36,8 +36,10 @@ step needs it. Everything else (transcription, export) works without Node.
 
 ## Step 1 — Input
 
-Take the one finished vertical mp4 the user provides (Mode A — the only mode).
-Confirm it is 1080×1920; if not, proceed anyway but note it. Set:
+Take the one finished vertical mp4 the user provides (Mode A — the only mode). Also
+note the user's **topic name + idea** — you'll use it (plus the transcript) to
+auto-generate the hook in Step 3b. Confirm the video is 1080×1920; if not, proceed
+anyway but note it. Set:
 
 - `VIDEO` = absolute path to the input mp4.
 - `OUT` = the final output path. Default: same folder as `VIDEO`, named
@@ -61,12 +63,27 @@ align a known script instead — optional, not the default.)
 
 ## Step 3 — Style
 
-Ask the user for a `styleName` (or use the one passed as the argument). Built-in
-styles live in `remotion/src/captions/styles.ts`:
+`curioFacts` is the **default** and the recommended look for facts / curiosity
+Shorts (derived from analysing high-view Shorts): white Montserrat ExtraBold,
+sentence case, 1–2 words on a single line at ~7% of frame height, thick black
+outline, centered at ~75% down, word-by-word pop, with the payoff word/number in
+yellow. Use it unless the user asks for something else. Other built-in styles live
+in `remotion/src/captions/styles.ts` (`cosmicClean`, `moneyBold`, `boldYellow`,
+`karaokePill`, `outline`, `premiumGold`, `minimal`, …).
 
-- `cosmicClean` — calm fade, white text, blue active word, lower-third.
-- `moneyBold` — uppercase pop-in, green active word, centered.
-- `minimal` — ultra-clean, no highlight.
+### Emphasis (yellow words) + hook — decide these per script, no fixed list
+
+There is **no keyword list / heuristic** — the emphasis intelligence is you (Claude)
+reading the script fresh each time:
+
+- **Numbers / units / % / $ are auto-emphasised** structurally (`3.5`, `90%`, `$2M`,
+  `12°C`) — nothing to configure, always on.
+- **Payoff words:** read the user's topic + the transcript and pick the ~2–4 words per
+  10s that actually carry the meaning for *this* script (the surprising noun, the twist
+  word), then pass them via `--keywords "word1, word2"`. Choose by understanding — never
+  from a preset list.
+- **Hook:** the user does **not** provide it — you generate it from the video + topic in
+  Step 3b, then pass it via `--hook "..."` (big ALL-CAPS scroll-stopper, auto-timed).
 
 **Want to pick visually?** Offer to open **Remotion Studio** — a live browser
 preview where the user scrubs the video and flips styles/options in a side panel,
@@ -83,6 +100,28 @@ Optional overrides to offer: `--hook "<opening line>"`, `--progress` (progress
 bar on), `--style <name>`. Anything deeper (colors, fonts, new styles) is edited
 in `styles.ts`.
 
+## Step 3b — Generate the hook (automatic, 3-agent panel)
+
+The user gives only the **video + topic name + idea** — never the hook text. You write
+it, using the video's own content:
+
+1. **Gather context once** — do NOT make each agent re-watch the video. You already have
+   the full transcript in `words.json`; optionally sample 2–3 opening frames via the
+   `/watch` skill for visual cues. This shared context feeds all agents.
+2. **Spawn 3 hook-writer agents in parallel**, each a distinct framework, all given the
+   topic + idea + transcript (+ opening frames):
+   - **Curiosity gap / open loop** — tease a question the viewer must resolve.
+   - **Shock number / stat** — lead with the most surprising figure.
+   - **Bold / contrarian claim** — challenge an assumption ("you're doing X wrong").
+   Each returns 2–3 candidate lines (≤5 words, punchy, reads well big + ALL-CAPS).
+3. **Judge + pick** — score every candidate for scroll-stop power (<1s), relevance to the
+   payoff, brevity (≤5 words), and big-text readability. Choose **1 winner + 1 backup**.
+4. **Show the user the winner (+ the backup and other candidates) and STOP for approval.**
+   Always wait for their OK before rendering — do not auto-proceed. They can approve the
+   winner, pick an alternate, or ask for a reword; only continue once they confirm.
+5. **Pass to render** via `--hook "<winner>"`. Do **not** pass `--hook-seconds`: the
+   renderer auto-times the hook to the first natural pause in the narration (clamped 2–4s).
+
 ## Step 4 — Render + Export
 
 Render captions over the full frame:
@@ -92,8 +131,14 @@ node "${CLAUDE_SKILL_DIR}/remotion/render.mjs" \
   --video "$VIDEO" \
   --captions "$TMP/words.json" \
   --output "$TMP/captioned.mp4" \
-  --style "$STYLE"
+  --style "$STYLE" \
+  --hook "$HOOK" \
+  --keywords "$KEYWORDS"
 ```
+
+`--style` defaults to `curioFacts` if omitted. `--hook` and `--keywords` are optional
+but recommended (see Step 3): the hook is the ALL-CAPS opener, `--keywords` are the
+contextual payoff words you chose for this script (numbers are emphasised automatically).
 
 Then transcode to the YouTube Shorts delivery preset, writing the **final** file:
 
