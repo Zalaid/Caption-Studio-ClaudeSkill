@@ -19,7 +19,7 @@ type Page = {
 type Props = {
   pages: Page[];
   style: CaptionStyle;
-  keyWords?: string[]; // normalized (see normalizeWord)
+  keySet?: Set<string>; // normalized words to render in keyColor (see normalizeWord)
 };
 
 /** Lowercase + strip punctuation/whitespace so "VANISHES." matches "vanishes". */
@@ -27,12 +27,24 @@ export function normalizeWord(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+/**
+ * Numbers / quantities / units / currency are ALWAYS the heaviest info on screen,
+ * so they get auto-emphasised structurally — no word list, purely "does the token
+ * carry a digit or a unit symbol" (e.g. "3.5", "1,000,000", "90%", "$2M", "12°C").
+ */
+export function isNumeric(s: string): boolean {
+  return /\d/.test(s) || /[%$€£¥°]/.test(s);
+}
+
 function positionStyle(position: CaptionPosition): React.CSSProperties {
   if (position === "center") {
     return { justifyContent: "center", paddingBottom: 0 };
   }
   if (position === "lower-third") {
-    return { justifyContent: "flex-end", paddingBottom: 320 };
+    // Anchor the caption's center at ~75% of a 1920px frame — the sweet spot the
+    // highest-view channels use (zackdfilms ~76%, RealLifeLore ~74%, Kurzgesagt ~78%)
+    // and clear of the Shorts UI (handle/title/action buttons live below ~83%).
+    return { justifyContent: "flex-end", paddingBottom: 400 };
   }
   return { justifyContent: "flex-start", paddingTop: position.y };
 }
@@ -112,7 +124,7 @@ const Word: React.FC<{
   );
 };
 
-export const CaptionLayer: React.FC<Props> = ({ pages, style, keyWords = [] }) => {
+export const CaptionLayer: React.FC<Props> = ({ pages, style, keySet }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const currentMs = (frame / fps) * 1000;
@@ -147,7 +159,8 @@ export const CaptionLayer: React.FC<Props> = ({ pages, style, keyWords = [] }) =
         <div key={li} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0 0.28em" }}>
           {lineTokens.map((token, ti) => {
             const active = currentMs >= token.fromMs && currentMs < token.toMs;
-            const isKey = keyWords.includes(normalizeWord(token.text));
+            const isKey =
+              isNumeric(token.text) || (keySet ? keySet.has(normalizeWord(token.text)) : false);
             return (
               <Word
                 key={`${li}-${ti}`}
