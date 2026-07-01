@@ -46,12 +46,13 @@ export const captionedShortSchema = z.object({
       "hotPink",
       "softAmber",
       "premiumGold",
+      "curioFacts",
     ])
-    .default("cosmicClean"),
+    .default("curioFacts"),
 
-  // One or more "key words" (comma/space separated). In styles that define a key
-  // color (e.g. premiumGold), these words render in the brand color + ALL-CAPS with
-  // a bigger pop — the editorial payoff word. Other styles ignore this.
+  // Contextual payoff words to render in the key color (comma/space separated).
+  // Chosen per script by meaning (Claude reading the topic + transcript) — NOT from a
+  // fixed list. Numbers/units/% are emphasised automatically and need not be listed here.
   keyWords: z.string().default(""),
 
   // Per-video overrides (optional — leave undefined to use the style's value)
